@@ -18,7 +18,7 @@ const Feedback = (props) => {
   )
 }
 
-const StatLine = ({text, score, isPercentage}) => {
+const StatisticsLine = ({text, score, isPercentage}) => {
   if (isPercentage) {
     return <div>{text} {score} %</div>
   }
@@ -41,12 +41,12 @@ const Statistics = (props) => {
   return (
     <div>
       <Title text={'statistics'}/>
-      <StatLine text={props.titleGood} score={props.scoreGood} isPercentage={false} />
-      <StatLine text={props.titleNeutral} score={props.scoreNeutral} isPercentage={false} />
-      <StatLine text={props.titleBad} score={props.scoreBad} isPercentage={false} />
-      <StatLine text={props.titleAll} score={props.scoreAll} isPercentage={false} />
-      <StatLine text={props.titleAvg} score={props.scoreAvg} isPercentage={false} />
-      <StatLine text={props.titlePositive} score={percentagePositive} isPercentage={true} />
+      <StatisticsLine text={props.titleGood} score={props.scoreGood} isPercentage={false} />
+      <StatisticsLine text={props.titleNeutral} score={props.scoreNeutral} isPercentage={false} />
+      <StatisticsLine text={props.titleBad} score={props.scoreBad} isPercentage={false} />
+      <StatisticsLine text={props.titleAll} score={props.scoreAll} isPercentage={false} />
+      <StatisticsLine text={props.titleAvg} score={props.scoreAvg} isPercentage={false} />
+      <StatisticsLine text={props.titlePositive} score={percentagePositive} isPercentage={true} />
     </div>
   )
 }
