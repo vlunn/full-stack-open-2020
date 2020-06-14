@@ -27,7 +27,16 @@ const StatLine = ({text, score, isPercentage}) => {
 
 const Statistics = (props) => {
 
-  const percentagePositive = (props.scoreAll === 0) ? 0 : props.scorePositive / props.scoreAll * 100
+  if (props.scoreAll === 0) {
+    return (
+      <div>
+        <Title text={'statistics'}/>
+        <div>No feedback given</div>
+      </div>
+    )
+  }
+
+  const percentagePositive = props.scorePositive / props.scoreAll * 100
 
   return (
     <div>
