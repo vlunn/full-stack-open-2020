@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import personService from './services/persons'
 
 const TextInputField = ({title, newValue, handleChange}) =>
   <div>{title}: <input value={newValue} onChange={handleChange} /></div>
@@ -23,11 +23,17 @@ const PersonForm = (props) => {
 const Filter = ({handleFilterChange}) =>
   <div>filter shown with <input onChange={handleFilterChange}></input></div>
 
-const PhoneBookRow = ({person}) =>
-  <p>{person.name} {person.number}</p>
+const DeleteButton = ({handleClick, person}) => 
+  <button onClick={() => handleClick(person)}>Delete</button>
 
-const Contacts = ({contacts}) =>
-  <>{contacts.map(person => <PhoneBookRow key={person.name} person={person}/>)}</>
+const PhoneBookRow = ({person, handleClick}) =>
+  <p>{person.name} {person.number} <DeleteButton handleClick={handleClick}
+                                                 person={person}/></p>
+
+const Contacts = ({contacts, handleClick}) =>
+  <>{contacts.map(person => <PhoneBookRow key={person.name} 
+                                          person={person}
+                                          handleClick={handleClick}/>)}</>
 
 const App = () => {
   const [ persons, setPersons ] = useState([])
@@ -36,54 +42,73 @@ const App = () => {
   const [ newFilter, setNewFilter ] = useState('')
 
   const contactsToShow = persons.filter(person => 
-    person.name.toLowerCase().includes(newFilter.toLowerCase())
-  )
+    person.name.toLowerCase().includes(newFilter.toLowerCase()))
+
+  const clearForm = () => {
+    setNewName('')
+    setNewNumber('')
+  }
 
   const handleSubmit = (event) => {
     event.preventDefault()
 
     const newPerson = { name: newName, number: newNumber }
 
-    if (persons.findIndex(person => person.name === newName) > -1) {
-      alert(`${newName} is already added to phonebook`)
+    // Update number if the person already exists:
+    const index = persons.findIndex(person => person.name === newName)
+    if (index > -1) {
+      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        personService
+          .update(persons[index].id, newPerson)
+          .then(response => 
+            setPersons(persons.filter(
+              person => person.id !== response.id)
+              .concat(response)))
+      }
+      clearForm()
       return
     }
 
-    setPersons(persons.concat(newPerson))
-    setNewName('')
-    setNewNumber('')
+    // Else: create new person
+    personService
+      .create(newPerson)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
+        clearForm()
+      })
   }
 
-  const handleNameChange = (event) =>
-    setNewName(event.target.value)
-
-  const handleNumberChange = (event) =>
-    setNewNumber(event.target.value)
-  
-  const handleFilterChange = (event) =>
-    setNewFilter(event.target.value)
+  const handleClick = (person) => {
+    const confirmResult = window.confirm(`Delete ${person.name}?`)
+    
+    if (confirmResult) {
+      personService
+      .remove(person.id)
+      .then(
+        setPersons(persons.filter(
+          existingPerson => existingPerson.id !== person.id)))
+    }
+  }
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)
-      })
+    personService
+      .getAll()
+      .then(initialPersons => setPersons(initialPersons))
   }, [])
 
   return (
     <div>
       <h2>Phonebook</h2>
 
-      <Filter handleFilterChange={handleFilterChange}/>
+      <Filter handleFilterChange={(event) => setNewFilter(event.target.value)}/>
 
       <h3>Add a new</h3>
       <PersonForm handleSubmit={handleSubmit}
-                  newName={newName} handleNameChange={handleNameChange}
-                  newNumber={newNumber} handleNumberChange={handleNumberChange}/>
+                  newName={newName} handleNameChange={(event) => setNewName(event.target.value)}
+                  newNumber={newNumber} handleNumberChange={(event) => setNewNumber(event.target.value)}/>
       
       <h3>Numbers</h3>
-      <Contacts contacts={contactsToShow}/>
+      <Contacts contacts={contactsToShow} handleClick={handleClick}/>
     </div>
   )
 }
